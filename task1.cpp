@@ -14,16 +14,16 @@ struct edge
     int source, dest, cap;
 };
 
-/*void add_edges(vector<edge> res,edge bw)
-{
-    res.push_back()
-}*/
-
-bool augment_path( vector<edge> residual, int source, int sink)
+/// @brief Function to fdetermine if an augmented path exists from source to sink for the given residual graph
+/// @param residual Vector of type structure edgee that stores the network flow
+/// @param source Source node
+/// @param sink Sink node
+/// @param parent Placehold Vector of type int that stores that maps a node to it's previous node in a given augmented path
+/// @return True or false for whether an augmented path exists for given residual graph
+bool augment_path(vector<edge>& residual, int source, int sink, vector<int>& parent)
 {
     vector<bool> visited(n, false);
     queue<int> q;
-    vector<int> parent(n, -1);
 
     visited[source] = true;
     q.push(source);
@@ -33,116 +33,90 @@ bool augment_path( vector<edge> residual, int source, int sink)
         int u = q.front();
         q.pop();
 
-        for (int v = 0; v < n; ++v) {
-            if (!visited[v] && residual[v].cap > 0) {
-                visited[v] = true;
-                q.push(v);
-                parent[v] = u;
-                if (v == sink) {
-                    return true; // Found an augmented path
+        for (int i = 0; i < residual.size(); i++) {
+            edge e = residual[i];
+            if (e.source == u && !visited[e.dest] && e.cap > 0) {
+                visited[e.dest] = true;
+                q.push(e.dest);
+                parent[e.dest] = i;
+                if (e.dest == sink) {
+                    return true;
                 }
             }
         }
     }
 
-    return false; // No augmented path found
+    return false;
 }
 
-int bottleneck(vector<edge> residual, int source, int sink, vector<int>& parent) 
+int bottleneck(vector<edge>& residual, int source, int sink, vector<int>& parent) 
 {
-    int b = INT_MAX;  // initialize the bottleneck to a large value
-    int v = sink;  // start from the sink node
-    while (v != source) {  // traverse the path from sink to source
-        int u = parent[v];
-        int index;
+    int b = INT_MAX;
+    int v = sink;
 
-        for (int i = 0; i < residual.size(); i++) 
-        {
-            if(residual[i].source== u && residual[i].dest==v)
-            {
-                index=i;
-                break;
-            }
-
-        }
-
-        b = min(b, residual[index].cap);  // update bottleneck
-        v = u;
+    while (v != source) {
+        int i = parent[v];
+        edge e = residual[i];
+        b = min(b, e.cap);
+        v = e.source;
     }
+
     return b;
 }
 
-int ford_fulkerson(vector<edge> residual, int source, int sink)
+int ford_fulkerson(vector<edge>& graph, int source, int sink)
 {
-    int max_flow =0;
+    vector<edge> residual = graph;
+    vector<int> parent(n);
+    int max_flow = 0;
 
-    int v = sink;  
-    while (v != source)
-    {
-        vector<int> parent(n, -1);
-        int u = parent[v];
-        bool has_augmented_path = augment_path(residual, source, sink);
-        if (has_augmented_path)
-        {
-            int bottle = bottleneck(residual, source, sink, parent);
+    while (augment_path(residual, source, sink, parent)) {
+        int b = bottleneck(residual, source, sink, parent);
+        max_flow += b;
 
-            max_flow = max_flow + bottle;
+        int v = sink;
+        while (v != source) {
+            int i = parent[v];
+            residual[i].cap -= b;
+            v = residual[i].source;
 
-            for (int i = 0; i < residual.size(); i++) 
-            {
-                if(residual[i].source== u && residual[i].dest==v)
-                {
-                    residual[i].cap = residual[i].cap - bottle;
-                
-                    edge backedge;
-                    backedge.source = v;
-                    backedge.dest = u;
-                    backedge.cap = bottle;
-
-                    residual.push_back(backedge);
-
-                }
-
-            }
-
-
+            //Add backward edge
+            edge back_edge;
+            back_edge.source = residual[i].dest;
+            back_edge.dest = residual[i].source;
+            back_edge.cap = b;
+            residual.push_back(back_edge);
         }
     }
 
     return max_flow;
-
 }
-
 
 int main()
 {
-    int s, t, u, v, c;
+    int s, t;
    
     vector<edge> input;
-    vector<edge> residual_graph;
-    cout<< "Enter number of nodes and edges";
+
+    cout<< "Enter number of nodes and edges: ";
     cin >> n >> e;
 
-    cout<< "Enter the index of the start and sink nodes";
-
+    cout<< "Enter the index of the start and sink nodes: ";
     cin >> s >> t;
 
-    for (int i = 0; i < e; i++) 
-    {
-        cout<< "Enter the indices of the nodes of the edges along with it's capacity";
-        cin>> a >> b >> c;
-
+    for (int i = 0; i < e; i++) {
         edge in;
-        in.source = a;
-        in.dest = b;
-        in.cap = c;
-
+        cout << "Enter values for element " << i+1 << ": ";
+        cin >> in.source >> in.dest >> in.cap;
         input.push_back(in);
-        
+
+
     }
 
-    ford_fulkerson(input, s, t);
+    int max_flow = ford_fulkerson(input, s, t);
+    cout << "Max flow: " << max_flow << endl;
 
+    return 0;
 }
 
 
