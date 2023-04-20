@@ -130,11 +130,15 @@ int main()
     for (int i = 0; i < e; i++) 
     {
         cout<< "Enter the indices of the nodes of the edges along with it's capacity";
-        cin>> u >> v >> c;
+        cin>> a >> b >> c;
 
-        input[i].source = u;
-        input[i].dest = v;
-        input[i].cap = c;
+        edge in;
+        in.source = a;
+        in.dest = b;
+        in.cap = c;
+
+        input.push_back(in);
+        
     }
 
     ford_fulkerson(input, s, t);
