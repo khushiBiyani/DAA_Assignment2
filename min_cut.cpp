@@ -83,14 +83,54 @@ void min_cut(vector<edge>& residual, int source, int sink, vector<edge>& graph)
             }
         }
     }
-
+    vector<int> a,b;
     // Find minimum cut by iterating over all edges in the input graph
     for (int i = 0; i < graph.size(); i++) {
+        
         edge e = graph[i];
         // Check if one endpoint is in visited set and the other is not
         if (visited[e.source] && !visited[e.dest]) {
             cout << "Minimum cut: " << e.source << " - " << e.dest << endl;
         }
+        if(visited[e.source])
+        {
+            int flag=0;
+            for(int j=0;j<a.size();j++)
+            {
+                if(a[j]==e.source)
+                {
+                    flag=1;
+                    break;
+                }
+            }
+            if(flag==0)
+                a.push_back(e.source);
+        }
+        else
+        {
+            int flag=0;
+            for(int j=0;j<b.size();j++)
+            {
+                if(b[j]==e.source)
+                {
+                    flag=1;
+                    break;
+                }
+            }
+            if(flag==0)
+                b.push_back(e.source);
+        }
+    }
+    b.push_back(sink);
+    cout<<"Two partition sets are:"<<endl;
+    for(int i=0;i<a.size();i++)
+    {
+        cout<<a[i]<<" ";
+    }
+    cout<<endl;
+    for(int i=0;i<b.size();i++)
+    {
+        cout<<b[i]<<" ";
     }
 }
 
@@ -130,10 +170,10 @@ int main()
    
     vector<edge> input;
 
-    cout<< "Enter number of nodes and edges: ";
+    cout<< "Enter number of nodes and edges: "<<endl;
     cin >> n >> e;
 
-    cout<< "Enter the index of the start and sink nodes: ";
+    cout<< "Enter the index of the start and sink nodes: "<<endl;
     cin >> s >> t;
 
     for (int i = 0; i < e; i++) {
@@ -144,6 +184,7 @@ int main()
         cin >> in.dest;
         cout << "Enter cap for element " << i+1 << ": ";
         cin >> in.cap;
+        cout<<endl;
         input.push_back(in);
 
 
