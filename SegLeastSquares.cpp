@@ -1,17 +1,18 @@
 #include <bits/stdc++.h>
 #include <math.h>
 #include <cmath>
-// #define INF numeric_limits<double>::infinity()
 using namespace std;
+
+
+vector<pair<double,double>> points; /*Vector of pair of x and y coordinate of point*/
+int nPoints=1000;   /*Number of Points*/
+vector<vector<double>> errors(nPoints+1,vector<double>(nPoints+1));     /*Least square error of the best fitting lines passing through the given point*/
+vector<double> opt(nPoints+1);      /*Used to calculate the set of lines which give the minimum error*/
+vector<double> optTill(nPoints+1);      /*Used to store the beginning point of the set of lines which gives most optimal solution*/
+vector<vector<double>> slopes(nPoints+1,vector<double>(nPoints+1)),intercepts(nPoints+1,vector<double>(nPoints+1));     /*Slope of the best fitting lines through the giveb point*/
+double c;       /*cost*/
  
-vector<pair<double,double>> points;
-int nPoints=1000;
-vector<vector<double>> errors(nPoints+1,vector<double>(nPoints+1));
-vector<double> opt(nPoints+1);
-vector<double> optTill(nPoints+1);
-vector<vector<double>> slopes(nPoints+1,vector<double>(nPoints+1)),intercepts(nPoints+1,vector<double>(nPoints+1));
-double c;
- 
+/// @brief Taking input from input.txt file
 void input()
 {
     double x, y;
@@ -36,7 +37,10 @@ void input()
     c=stof(temp1);
 }
  
-//print Points
+
+/// @brief print the points of the segment
+/// @param s : starting point of the segment
+/// @param e : ending point of the segment
 void printPoints(int s,int e)
 {
     for(int i=s;i<=e;i++)
@@ -45,7 +49,11 @@ void printPoints(int s,int e)
     }
 }
  
-//calculate error
+
+/// @brief calculate least sqaure error of the given line
+/// @param s start point of the segment
+/// @param e ending point of the segment
+/// @return least sqaure error of the line
 double calculateError(int s,int e)
 {
     double xySum = 0 , xSum=0 , ySum=0 , xsqSum=0 , n=e-s+1;
@@ -55,7 +63,6 @@ double calculateError(int s,int e)
         xSum+=points[k].first;
         ySum+=points[k].second;
         xsqSum+=(points[k].first)*(points[k].first);
-        // cout << "k: " << k << endl;
     }
     if(((n*xySum) - (xSum * ySum))==0)
         return 0;
@@ -68,10 +75,8 @@ double calculateError(int s,int e)
     }
     double slope=((n*xySum) - (xSum * ySum)) / ((n*xsqSum) - (xSum*xSum));
     slopes[s][e]=slope;
-    // cout << "Slopes found" << endl;
     double intercept=(ySum - (slope*xSum))/n;
     intercepts[s][e]=intercept;
-    // cout << "Intercept found" << endl;
     double sumSqError=0;
     for(int k=s;k<=e;k++)
     {
@@ -80,30 +85,28 @@ double calculateError(int s,int e)
         double sqError=error*error;
         sumSqError+=sqError;
     }
-    // cout << "sumSqerror found" << endl;
     return sumSqError;
 }
  
-//find least sqaure error
+/// @brief assign least square error to the errors vectors
 void leastSqError()
 {
     for(int j=1;j<=nPoints;j++)
     {
         for(int i=1;i<=j;i++)
         {
-            // cout << "i: " << i << "\t" << "j: " << j << endl;
             if(i==j) {
-                // cout << "i==j" << endl;
                 errors[i][j]=INFINITY;
             }
             else {
-                // cout << "i!=j" << endl;
                 errors[i][j]=calculateError(i,j);
             }
         }
     }
 }
  
+
+/// @brief compute the optimised set of lines
 void computeOpt()
 {
     for(int j=1;j<=nPoints;j++)
@@ -122,6 +125,8 @@ void computeOpt()
     }
 }
  
+
+/// @brief make the final optimised line segments that best approximates the given points 
 void makeSegments()
 {
     stack<double> st;
@@ -132,7 +137,6 @@ void makeSegments()
         st.push(e);
         st.push(s);
     }
-    // printf("done ebfore printing");
     while(st.size())
     {
         int x=st.top();         //start
@@ -144,16 +148,13 @@ void makeSegments()
     }
 }
  
+/// @brief main function to call the requires subroutines in the required order
+/// @return end of the program
 int main()
 {
     input();
-    // cout << "After input" << endl;
     opt.push_back(0);
-    // optTill.push_back(0);
-    // printPoints(0,points.size()-1);
-    // cout << "After prinintg" << endl;
     leastSqError();
-    // cout << "After leastSq" << endl;
     computeOpt();
     makeSegments();
     return 0;
