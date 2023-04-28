@@ -4,8 +4,12 @@
 #include <limits>
 #include <limits.h> 
 #include <algorithm>
+#include <fstream>
+#include <chrono>
+#include <string>
 
 using namespace std;
+using namespace std::chrono;
 
 int n, e;
 
@@ -49,6 +53,12 @@ bool augment_path(vector<edge>& residual, int source, int sink, vector<int>& par
     return false;
 }
 
+/// @brief Function to calculate the bottleneck value for a given augmented path
+/// @param residual The residual graph 
+/// @param source Source node of the input graph
+/// @param sink Sink node of the input graph
+/// @param parent Vector that maps a node to it's previous node in a given augmented path
+/// @return Bottleneck value of the given augmented path
 int bottleneck(vector<edge>& residual, int source, int sink, vector<int>& parent) 
 {
     int b = INT_MAX;
@@ -64,81 +74,38 @@ int bottleneck(vector<edge>& residual, int source, int sink, vector<int>& parent
     return b;
 }
 
-void min_cut(vector<edge>& residual, int source, int sink, vector<edge>& graph)
-{
-    vector<bool> visited(n, false);
-    queue<int> q;
-    visited[source] = true;
-    q.push(source);
+/// @brief Function to add back edges to the network flow after every iteration of the Ford Fulkerson algorithm
+/// @param edges Placeholder vector of type edge which is traversed through to find a particular edge in it
+/// @param u Source node of backedge
+/// @param v Destination node of backedge
+/// @param b Bottleneck value
 
-    while (!q.empty()) {
-        int u = q.front();
-        q.pop();
-
-        for (int i = 0; i < residual.size(); i++) {
-            edge e = residual[i];
-            if (e.source == u && !visited[e.dest] && e.cap > 0) {
-                visited[e.dest] = true;
-                q.push(e.dest);
-            }
+void add_backedge(vector<edge>& edges, int u, int v, int b) {
+    for (edge& e : edges) {
+        if (e.source == u && e.dest == v) { //if backedge already exists in the residual graph, increase capacity by bottleneck
+            e.cap += b;
+            return; // return after the first match is found
         }
     }
-    vector<int> a,b;
-    // Find minimum cut by iterating over all edges in the input graph
-    for (int i = 0; i < graph.size(); i++) {
-        
-        edge e = graph[i];
-        // Check if one endpoint is in visited set and the other is not
-        if (visited[e.source] && !visited[e.dest]) {
-            cout << "Minimum cut: " << e.source << " - " << e.dest << endl;
-        }
-        if(visited[e.source])
-        {
-            int flag=0;
-            for(int j=0;j<a.size();j++)
-            {
-                if(a[j]==e.source)
-                {
-                    flag=1;
-                    break;
-                }
-            }
-            if(flag==0)
-                a.push_back(e.source);
-        }
-        else
-        {
-            int flag=0;
-            for(int j=0;j<b.size();j++)
-            {
-                if(b[j]==e.source)
-                {
-                    flag=1;
-                    break;
-                }
-            }
-            if(flag==0)
-                b.push_back(e.source);
-        }
-    }
-    b.push_back(sink);
-    cout<<"Two partition sets are:"<<endl;
-    for(int i=0;i<a.size();i++)
-    {
-        cout<<a[i]<<" ";
-    }
-    cout<<endl;
-    for(int i=0;i<b.size();i++)
-    {
-        cout<<b[i]<<" ";
-    }
+    //if backedge already does not exist in the residual graph, push backedge into residual graph with capcity equal to bottleneck
+    edge back_edge;
+    back_edge.source = u;
+    back_edge.dest = v;
+    back_edge.cap = b;
+    edges.push_back(back_edge);
 }
 
+/// @brief Function that performs the Ford Fulkerson algorithm on the input graph
+/// @param graph Residual Graph
+/// @param source Source node of input graph
+/// @param sink Sink node of input graph
+/// @return Max flow value of input graph
 int ford_fulkerson(vector<edge>& graph, int source, int sink)
 {
     vector<edge> residual = graph;
     vector<int> parent(n);
     int max_flow = 0;
+
 
     while (augment_path(residual, source, sink, parent)) {
         int b = bottleneck(residual, source, sink, parent);
@@ -148,113 +115,105 @@ int ford_fulkerson(vector<edge>& graph, int source, int sink)
         while (v != source) {
             int i = parent[v];
             residual[i].cap -= b;
+            int u = v;
             v = residual[i].source;
 
             //Add backward edge
-            edge back_edge;
-            back_edge.source = residual[i].dest;
-            back_edge.dest = residual[i].source;
-            back_edge.cap = b;
-            residual.push_back(back_edge);
+            add_backedge(residual, u, v, b);
+
         }
     }
-    min_cut(residual,source,sink,graph);
+
     return max_flow;
 }
 
-int max_bipartite_matching(vector<vector<int>>& graph) {
-    int left_size = graph.size();
-    int right_size = graph[0].size() - left_size;
-
-    vector<edge> edges;
-    for (int i = 0; i < left_size; i++) {
-        for (int j = left_size; j < left_size + right_size; j++) {
-            if (graph[i][j-left_size]) {
-                edge e;
-                e.source = i;
-                e.dest = j;
-                e.cap = 1;
-                edges.push_back(e);
-            }
-        }
+/// @brief Function that performs bipartite matching on a given graph using Ford Fulkerson algorithm
+/// @param graph Adjacency list of the input graph
+/// @param n Number of vertices in the graph
+/// @param m Number of edges in the graph
+/// @param a Vertices in partition A
+/// @param b Vertices in partition B
+/// @return Maximum number of matchings in the bipartite graph
+int bipartite_matching(vector<vector<int>>& graph, int n, int m, vector<int>& a, vector<int>& b) 
+{
+    vector<edge> residual;
+    for (int i = 0; i < m; i++) {
+        edge e1;
+        e1.source = graph[i][0];
+        e1.dest = graph[i][1];
+        e1.cap = 1;
+        residual.push_back(e1);
     }
 
-    // Add source and sink
-    int source = left_size + right_size;
-    int sink = left_size + right_size + 1;
+    int source = n + 1;
+    int sink = n + 2;
 
-    // Add edges from source to left partition
-    for (int i = 0; i < left_size; i++) {
-        edge e;
-        e.source = source;
-        e.dest = i;
-        e.cap = 1;
-        edges.push_back(e);
+    // Add edges from source to vertices in partition A with infinite capacity
+    for (int i = 0; i < a.size(); i++) {
+        edge e1;
+        e1.source = source;
+        e1.dest = a[i];
+        e1.cap = 1;
+        residual.push_back(e1);
     }
 
-    // Add edges from right partition to sink
-    for (int j = left_size; j < left_size + right_size; j++) {
-        edge e;
-        e.source = j;
-        e.dest = sink;
-        e.cap = 1;
-        edges.push_back(e);
+    // Add edges from vertices in partition B to sink with infinite capacity
+    for (int i = 0; i < b.size(); i++) {
+        edge e1;
+        e1.source = b[i];
+        e1.dest = sink;
+        e1.cap = 1;
+        residual.push_back(e1);
     }
-
-    n = left_size + right_size + 2; // Set the number of vertices
-
-    // Call the Ford-Fulkerson algorithm to find the maximum flow
-    return ford_fulkerson(edges, source, sink);
+    return ford_fulkerson(residual, source, sink);
 }
 
-/*
+
+/// @brief Main function that takes in the input graph and performs maximum bipartite matching on it
+/// @return Max flow of Input graph
 int main()
 {
-    int s, t;
-   
-    vector<edge> input;
+    auto start = high_resolution_clock::now();
 
-    cout<< "Enter number of nodes and edges: "<<endl;
-    cin >> n >> e;
-
-    cout<< "Enter the index of the start and sink nodes: "<<endl;
-    cin >> s >> t;
-
-    for (int i = 0; i < e; i++) {
-        edge in;
-        cout << "Enter source for element " << i+1 << ": ";
-        cin >> in.source;
-        cout << "Enter dest for element " << i+1 << ": ";
-        cin >> in.dest;
-        cout << "Enter cap for element " << i+1 << ": ";
-        cin >> in.cap;
-        cout<<endl;
-        input.push_back(in);
-
-
+    ifstream inputFile("input.txt");
+    vector<vector<int>> matr;
+    vector<int> l,r;
+    //cout<<"Enter the number of nodes:"<<endl;
+    inputFile>>n>>e;
+    //cout<<"Enter the number of edges:"<<endl;
+    //cin>>e;
+    for(int i=0;i<e;i++)
+    {
+        //cout<<"Enter Edge "<<i<<endl;
+        int x,y;
+        inputFile>>x>>y;
+        vector<int> z;
+        z.push_back(x);
+        z.push_back(y);
+        matr.push_back(z);
     }
+    int le,ri;
+    //cout<<"Enter the number of nodes in left and right side: "<<endl;
+    inputFile>>le>>ri;
+    for(int i=0;i<le;i++)
+    {
+        int o;
+        inputFile>>o;
+        l.push_back(o);
+    }
+    for(int i=0;i<ri;i++)
+    {
+        int o;
+        inputFile>>o;
+        r.push_back(o);
+    }
+    ofstream outFile("output.txt");
+    int numOfMatches = bipartite_matching(matr,n,e,l,r);
+    outFile<<"Number of Matches: "<<numOfMatches<<endl;
 
-    int max_flow = ford_fulkerson(input, s, t);
-    cout << "Max flow: " << max_flow << endl;
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+    outFile << "Time: " << duration.count() << " microseconds" << endl;
 
     return 0;
-}
-*/
-
-int main() {
-    int n, m;
-    cout<<"Enter n and m"<<endl;
-    cin >> n >> m;
-    
-    vector<vector<int>> graph(n, vector<int>(m, 0));
-    for (int i = 0; i < n; i++) 
-    {
-        cout<<"Enter elements of "<<i<<endl;
-        for (int j = 0; j < m; j++) 
-        {
-            cin >> graph[i][j];
-        }
-    }
-    int max_matching = max_bipartite_matching(graph);
-    cout << max_matching << endl;
 }
