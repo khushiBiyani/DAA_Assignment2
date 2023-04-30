@@ -17,10 +17,12 @@
 
 * To run Task 3 - Bipartite matching porblem
    *  Run the file bipartite.cpp
-   Input Format
-   1. 
-   2. 
-   3. 
+   *  Write the input into input.txt in the format
+   1. Total number of nodes and total number of edges
+   2. List of all edges (Enter the edges in the following way: start_node end_node)
+   3. Number of nodes in left partition and number of nodes in right partition
+   4. List of nodes in left partition
+   5. List of nodes in right partition
  
 *  To run Task 5 ad Task 6 - To find best fitting lines using segmented least square algorithm
    * Run the file SegLeastSq.cpp
