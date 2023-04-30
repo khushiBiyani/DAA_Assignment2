@@ -176,13 +176,9 @@ int main()
     ifstream inputFile("bipartite_graphs.txt");
     vector<vector<int>> matr;
     vector<int> l,r;
-    //cout<<"Enter the number of nodes:"<<endl;
     inputFile>>n>>e;
-    //cout<<"Enter the number of edges:"<<endl;
-    //cin>>e;
     for(int i=0;i<e;i++)
     {
-        //cout<<"Enter Edge "<<i<<endl;
         int x,y;
         inputFile>>x>>y;
         vector<int> z;
@@ -191,7 +187,8 @@ int main()
         matr.push_back(z);
     }
     int le,ri;
-    //cout<<"Enter the number of nodes in left and right side: "<<endl;
+    print(num_nodes_left*num_nodes_right)
+    print(max_edges)
     inputFile>>le>>ri;
     for(int i=0;i<le;i++)
     {
