@@ -23,8 +23,8 @@
    3. 
  
 *  To run Task 5 ad Task 6 - To find best fitting lines using segmented least square algorithm
-  * Run the file SegLeastSq.cpp
-  *Write the input into input.txt in the format: 
+   * Run the file SegLeastSq.cpp
+   *Write the input into input.txt in the format: 
     1. No. of points
     2. Points ( x y ) in next N subsequent lines
     3. Cost 
