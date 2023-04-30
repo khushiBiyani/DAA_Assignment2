@@ -30,4 +30,6 @@
     1. No. of points
     2. Points ( x y ) in next N subsequent lines
     3. Cost 
+ 
+ 
  *Run visualization.py for visualizing the final line segments. 
