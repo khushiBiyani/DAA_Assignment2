@@ -16,7 +16,7 @@
    3. Enter the follow values for every edge - Source node of edge, Destination Node, Capacity of edge
 
 * To run Task 3 - Bipartite matching porblem
-   *Run the file bipartite.cpp
+   *  Run the file bipartite.cpp
    Input Format
    1. 
    2. 
